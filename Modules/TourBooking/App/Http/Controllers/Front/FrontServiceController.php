@@ -466,7 +466,8 @@ final class FrontServiceController extends Controller
         $hotelDetails = $hotelInfo['HotelInfoResult']['HotelDetails'] ?? [];
 
         $roomDetails = $hotelRoom['GetHotelRoomResult']['HotelRoomsDetails'] ?? [];
-
+        $traceId = $request->traceId;
+        $resultIndex = $request->resultIndex;
         Log::info('TBO Hotel Data', [
         'hotelDetails' => $hotelDetails,
         'roomDetails'  => $roomDetails,
@@ -474,7 +475,9 @@ final class FrontServiceController extends Controller
 
         return view(
             'tourbooking::front.services.hotel-details',
-            compact('hotelDetails', 'roomDetails')
+            compact('hotelDetails', 'roomDetails',
+                    'traceId',
+                    'resultIndex')
         );
     }
 

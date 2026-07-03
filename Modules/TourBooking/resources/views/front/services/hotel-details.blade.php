@@ -313,10 +313,27 @@
                                                         ₹{{ number_format(($room['Price']['PublishedPriceRoundedOff'] ?? 0) - ($room['Price']['OfferedPriceRoundedOff'] ?? 0)) }})
                                                     </span>
                                                 </p>
-                                                <button
-                                                    class="btn btn-booking btn-block font-weight-bold text-uppercase shadow-sm">
-                                                    {{ __('Book Room') }} <i class="fa-solid fa-arrow-right ml-1"></i>
-                                                </button>
+                                                <form action="{{ route('hotel.block.room') }}" method="POST">
+
+    @csrf
+
+    <input type="hidden" name="trace_id" value="{{ $traceId }}">
+
+    <input type="hidden" name="result_index" value="{{ $resultIndex }}">
+
+    <input type="hidden" name="hotel_code" value="{{ $hotelDetails['HotelCode'] }}">
+
+    <input type="hidden" name="hotel_name" value="{{ $hotelDetails['HotelName'] }}">
+
+    <input type="hidden" name="guest_nationality" value="IN">
+
+    <input type="hidden" name="room" value="{{ base64_encode(json_encode($room)) }}">
+
+    <button class="btn btn-primary btn-block">
+        Book Room
+    </button>
+
+</form>
                                             </div>
                                         </div>
                                     </div>

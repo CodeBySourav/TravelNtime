@@ -20,6 +20,8 @@ use App\Http\Controllers\User\ProfileController as UserProfileController;
 use App\Http\Controllers\Agency\ProfileController as AgencyProfileController;
 use App\Http\Controllers\User\OrderController;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\HotelBookingController;
+use App\Http\Controllers\FlightController;
 
 Route::group(['middleware' => ['HtmlSpecialchars', 'MaintenanceMode']], function () {
 
@@ -134,6 +136,50 @@ Route::group(['middleware' => ['HtmlSpecialchars', 'MaintenanceMode']], function
 });
 
 
+Route::prefix('hotel')->group(function () {
+
+    // Block Room
+    Route::post('/block-room', [HotelBookingController::class, 'blockRoom'])
+        ->name('hotel.block.room');
+
+    // Guest Details Page
+    Route::get('/guest-details', [HotelBookingController::class, 'guestDetails'])
+        ->name('hotel.guest.details');
+
+    // Book Hotel
+    Route::post('/book', [HotelBookingController::class, 'book'])
+        ->name('hotel.book');
+
+    // Booking Success
+    Route::get('/booking-success', [HotelBookingController::class, 'bookingSuccess'])
+        ->name('hotel.booking.success');
+
+    Route::get('/my-bookings', [HotelBookingController::class, 'myBookings'])
+    ->name('hotel.my.bookings');
+
+    Route::get('/booking/{booking}', [HotelBookingController::class, 'show'])
+    ->name('hotel.booking.show');
+
+    Route::post('/{booking}/cancel', [HotelBookingController::class, 'cancel'])
+    ->name('hotel.cancel');
+});
+
+
+Route::prefix('flight')->group(function () {
+
+    Route::get('/search', [FlightController::class, 'index'])
+        ->name('flight.search.form');
+    
+    // Search Flights
+    Route::post('/search', [FlightController::class, 'search'])
+        ->name('flight.search');
+
+    // Search Result Page
+    Route::get('/results', [FlightController::class, 'results'])
+        ->name('flight.results');
+ 
+
+});
 
 Route::group(['as' => 'admin.', 'prefix' => 'admin'], function () {
 
