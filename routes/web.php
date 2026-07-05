@@ -165,20 +165,40 @@ Route::prefix('hotel')->group(function () {
 });
 
 
-Route::prefix('flight')->group(function () {
+Route::prefix('flight')->name('flight.')->group(function () {
 
+    // Search Form
     Route::get('/search', [FlightController::class, 'index'])
-        ->name('flight.search.form');
-    
-    // Search Flights
+        ->name('search.form');
+
+    // Search API
     Route::post('/search', [FlightController::class, 'search'])
-        ->name('flight.search');
+        ->name('search');
 
-    // Search Result Page
+    // Search Result
     Route::get('/results', [FlightController::class, 'results'])
-        ->name('flight.results');
- 
+        ->name('results');
 
+    Route::post('/fare-quote', [FlightController::class, 'fareQuote'])
+        ->name('fareQuote');
+
+    Route::get('/traveller', [FlightController::class, 'traveller'])
+        ->name('traveller');
+
+    Route::post('/checkout', [FlightController::class, 'checkout'])
+        ->name('checkout');
+
+    Route::get('/ssr', [FlightController::class, 'ssr'])
+        ->name('ssr');
+
+    Route::post('/after-ssr', [FlightController::class, 'afterSSR'])
+    ->name('after.ssr');
+
+    Route::post('/book', [FlightController::class, 'book'])
+        ->name('book');
+
+    Route::get('/ticket', [FlightController::class, 'ticket'])
+    ->name('ticket');
 });
 
 Route::group(['as' => 'admin.', 'prefix' => 'admin'], function () {

@@ -303,16 +303,15 @@
                                             <span class="text-muted small d-block mb-0">Total Fare</span>
                                             <h3 class="fw-extrabold mb-1" style="color: #aa0022; font-size: 1.65rem;">₹${formattedFare}</h3>
                                             <div class="mb-3">${refundBadge}</div>
-                                           
-                                           <form  action="#"  >
+                                            
+                                            <form method="POST" action="{{ route('flight.fareQuote') }}">
                                                 @csrf
 
                                                 <input type="hidden" name="trace_id" value="{{ $result['TraceId'] }}">
                                                 <input type="hidden" name="result_index" value="${flight.ResultIndex}">
                                                 <input type="hidden" name="is_lcc" value="${flight.IsLCC}">
-                                                <input type="hidden" name="is_refundable" value="${flight.IsRefundable}">
 
-                                                <button class="btn w-100 fw-bold rounded-pill shadow-sm text-white custom-btn-primary">
+                                                <button class="btn btn-danger w-100">
                                                     Book Now <i class="fas fa-arrow-right ms-1 small"></i>
                                                 </button>
                                             </form>
