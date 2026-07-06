@@ -337,4 +337,26 @@ class FlightController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+
+    private function redirectToSearch()
+    {
+        session()->forget([
+            'flight.search',
+            'flight.response',
+            'flight.results',
+            'flight.trace_id',
+            'flight.fare_quote',
+            'flight.result_index',
+            'flight.ssr',
+            'flight.booking',
+            'flight.ticket',
+            'flight.travellers',
+            'flight.selected_ssr',
+            'flight.is_lcc'
+        ]);
+
+        return redirect()
+            ->route('flight.search.form')
+            ->with('error', 'Your flight session has expired. Please search again.');
+    }
 }
