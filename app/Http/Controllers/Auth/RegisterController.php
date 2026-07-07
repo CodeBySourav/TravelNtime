@@ -64,7 +64,7 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', 'min:4', 'max:100'],
-            'g-recaptcha-response'=>new Captcha()
+            // 'g-recaptcha-response'=>new Captcha()
 
         ],[
             'name.required' => trans('translate.Name is required'),

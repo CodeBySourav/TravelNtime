@@ -62,7 +62,7 @@ class LoginController extends Controller
         $rules = [
             'email' => 'required',
             'password' => 'required',
-            'g-recaptcha-response'=>new Captcha()
+            // 'g-recaptcha-response'=>new Captcha()
         ];
 
         $custom_error = [

@@ -15,7 +15,7 @@ class TboFlightService
      * TBO URLs
      */
     protected string $authUrl =
-        'https://api.tektravels.com/SharedServices/SharedData.svc/rest/Authenticate';
+        'https://Sharedapi.tektravels.com/SharedData.svc/rest/Authenticate';
 
     protected string $searchUrl =
         'https://api.tektravels.com/BookingEngineService_Air/AirService.svc/rest/Search';

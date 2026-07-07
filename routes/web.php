@@ -179,25 +179,25 @@ Route::prefix('flight')->name('flight.')->group(function () {
     Route::get('/results', [FlightController::class, 'results'])
         ->name('results');
 
-    Route::post('/fare-quote', [FlightController::class, 'fareQuote'])
+    Route::post('/fare-quote', [FlightController::class, 'fareQuote'])->middleware('auth')
         ->name('fareQuote');
 
-    Route::get('/traveller', [FlightController::class, 'traveller'])
+    Route::get('/traveller', [FlightController::class, 'traveller'])->middleware('auth')
         ->name('traveller');
 
-    Route::post('/checkout', [FlightController::class, 'checkout'])
+    Route::post('/checkout', [FlightController::class, 'checkout'])->middleware('auth')
         ->name('checkout');
 
-    Route::get('/ssr', [FlightController::class, 'ssr'])
+    Route::get('/ssr', [FlightController::class, 'ssr'])->middleware('auth')
         ->name('ssr');
 
-    Route::post('/after-ssr', [FlightController::class, 'afterSSR'])
+    Route::post('/after-ssr', [FlightController::class, 'afterSSR'])->middleware('auth')
     ->name('after.ssr');
 
-    Route::post('/book', [FlightController::class, 'book'])
+    Route::post('/book', [FlightController::class, 'book'])->middleware('auth')
         ->name('book');
 
-    Route::get('/ticket', [FlightController::class, 'ticket'])
+    Route::get('/ticket', [FlightController::class, 'ticket'])->middleware('auth')
     ->name('ticket');
 });
 

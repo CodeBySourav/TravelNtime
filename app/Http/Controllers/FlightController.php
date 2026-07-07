@@ -232,6 +232,7 @@ class FlightController extends Controller
 
     public function ssr()
     {
+        
         $ssr = session('flight.ssr');
 
         $baggage = $ssr['Response']['Baggage'][0] ?? [];
