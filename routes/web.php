@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\AirportController;
 use App\Http\Controllers\VisaController;
 use App\Http\Controllers\Admin\UserController;
 
@@ -164,6 +165,11 @@ Route::prefix('hotel')->group(function () {
     ->name('hotel.cancel');
 });
 
+
+Route::get('/airport/import', [AirportController::class, 'import']);
+
+Route::get('/airports/search', [AirportController::class, 'searchAirport'])
+    ->name('airports.search');
 
 Route::prefix('flight')->name('flight.')->group(function () {
 

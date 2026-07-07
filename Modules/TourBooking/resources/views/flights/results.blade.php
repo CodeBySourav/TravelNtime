@@ -235,19 +235,61 @@
             <!-- From Location Code Input -->
             <div class="col-md-3 field-group">
                 <label>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
                     From
                 </label>
-                <input type="text" class="form-box-input" name="origin" value="{{ strtoupper($search['origin'] ?? 'DEL') }}" required style="text-transform: uppercase;">
+
+                <div class="position-relative">
+
+                    <input type="text"
+                        id="origin_search"
+                        class="form-box-input"
+                        value="{{ ($search['origin'] ?? 'DEL') }}"
+                        placeholder="City or Airport">
+
+                    <input type="hidden"
+                        name="origin"
+                        id="origin"
+                        value="{{ strtoupper($search['origin'] ?? 'DEL') }}">
+
+                    <div id="origin_list"
+                        class="list-group position-absolute w-100"
+                        style="z-index:9999;"></div>
+
+                </div>
             </div>
 
             <!-- Destination Location Code Input -->
             <div class="col-md-3 field-group">
                 <label>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
                     To
                 </label>
-                <input type="text" class="form-box-input" name="destination" value="{{ strtoupper($search['destination'] ?? 'BOM') }}" required style="text-transform: uppercase;">
+
+                <div class="position-relative">
+
+                    <input type="text"
+                        id="destination_search"
+                        class="form-box-input"
+                        value="{{ ($search['destination'] ?? 'BOM') }}"
+                        placeholder="City or Airport">
+
+                    <input type="hidden"
+                        name="destination"
+                        id="destination"
+                        value="{{ strtoupper($search['destination'] ?? 'BOM') }}">
+
+                    <div id="destination_list"
+                        class="list-group position-absolute w-100"
+                        style="z-index:9999;"></div>
+
+                </div>
             </div>
 
             <!-- Outbound Departure Date Input -->
@@ -423,4 +465,64 @@
 @endforeach
 
 </div>
+
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+ 
+
+<script>
+function airportSearch(inputId, hiddenId, listId) {
+
+    $('#' + inputId).on('keyup', function () {
+
+        let keyword = $(this).val();
+
+        if (keyword.length < 2) {
+            $('#' + listId).html('');
+            return;
+        }
+
+        $.get("{{ route('airports.search') }}", {
+            q: keyword
+        }, function (data) {
+
+            let html = '';
+
+            $.each(data, function (i, airport) {
+
+                html += `
+                    <a href="#"
+                       class="list-group-item list-group-item-action airport-item"
+                       data-code="${airport.airport_code}"
+                       data-name="${airport.city_name} (${airport.airport_code}) - ${airport.airport_name}">
+                        <strong>${airport.city_name}</strong> (${airport.airport_code})<br>
+                        <small>${airport.airport_name}</small>
+                    </a>
+                `;
+
+            });
+
+            $('#' + listId).html(html);
+
+        });
+
+    });
+
+    $(document).on('click', '#' + listId + ' .airport-item', function (e) {
+
+        e.preventDefault();
+
+        $('#' + inputId).val($(this).data('name'));
+
+        $('#' + hiddenId).val($(this).data('code'));
+
+        $('#' + listId).html('');
+
+    });
+
+}
+
+airportSearch('origin_search', 'origin', 'origin_list');
+airportSearch('destination_search', 'destination', 'destination_list');
+</script>
 @endsection

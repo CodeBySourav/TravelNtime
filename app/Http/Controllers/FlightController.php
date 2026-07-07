@@ -6,6 +6,11 @@ use Illuminate\Http\Request;
 use App\Services\TboFlightService;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use App\Models\FlightBooking;
+use App\Models\FlightPassenger;
+use App\Models\FlightSegment;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class FlightController extends Controller
 {
@@ -324,11 +329,29 @@ class FlightController extends Controller
                 'travellers' => session('flight.travellers'),
             ], $request->ip());
 
+            Log::info($response);
+
+            try {
+                $this->saveBooking($response);
+            } catch (\Throwable $e) {
+
+                Log::error('SAVE BOOKING ERROR');
+
+                Log::error($e->getMessage());
+
+                Log::error($e->getFile());
+
+                Log::error($e->getLine());
+
+                throw $e;
+            }
+
             session([
                 'flight.ticket' => $response
             ]);
             Log::info($response);
 
+            
             return view('tourbooking::flights.ticket', [
                 'ticket' => $response
             ]);
@@ -337,6 +360,109 @@ class FlightController extends Controller
 
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    private function saveBooking($response)
+    {
+        DB::transaction(function () use ($response) {
+
+            $travellers = session('flight.travellers');
+            $fareQuote  = session('flight.fare_quote');
+
+            $result = $response['Response']['Response'] ?? [];
+
+            $segments = $fareQuote['Response']['Results']['Segments'][0] ?? [];
+
+            $booking = FlightBooking::create([
+
+                'user_id' => Auth::id(),
+
+                'booking_id' => $result['BookingId'] ?? null,
+
+                'booking_ref' => $result['BookingRefNo'] ?? null,
+
+                'pnr' => $result['PNR'] ?? null,
+
+                'trace_id' => session('flight.trace_id'),
+
+                'result_index' => session('flight.result_index'),
+
+                'airline' => $segments[0]['Airline']['AirlineCode'] ?? null,
+
+                'flight_number' => ($segments[0]['Airline']['FlightNumber'] ?? null),
+
+                'origin' => $segments[0]['Origin']['Airport']['AirportCode'] ?? null,
+
+                'destination' => $segments[count($segments)-1]['Destination']['Airport']['AirportCode'] ?? null,
+
+                'departure' => $segments[0]['Origin']['DepTime'] ?? null,
+
+                'arrival' => $segments[count($segments)-1]['Destination']['ArrTime'] ?? null,
+
+                'published_fare' => $fareQuote['Response']['Results']['Fare']['PublishedFare'] ?? 0,
+
+                'offered_fare' => $fareQuote['Response']['Results']['Fare']['OfferedFare'] ?? 0,
+
+                'is_lcc' => session('flight.is_lcc'),
+
+                'status' => 'Booked',
+
+                'api_response' => $response,
+            ]);
+
+            foreach ($segments as $segment) {
+
+                FlightSegment::create([
+
+                    'booking_id' => $booking->id,
+
+                    'airline' => $segment['Airline']['AirlineCode'],
+
+                    'flight_number' => $segment['Airline']['FlightNumber'],
+
+                    'origin' => $segment['Origin']['Airport']['AirportCode'],
+
+                    'destination' => $segment['Destination']['Airport']['AirportCode'],
+
+                    'departure' => $segment['Origin']['DepTime'],
+
+                    'arrival' => $segment['Destination']['ArrTime'],
+                ]);
+            }
+
+            foreach ($travellers['travellers'] as $index => $pax) {
+
+                FlightPassenger::create([
+
+                    'booking_id' => $booking->id,
+
+                    'title' => $pax['title'],
+
+                    'first_name' => $pax['first_name'],
+
+                    'last_name' => $pax['last_name'],
+
+                    'pax_type' => $pax['pax_type'],
+
+                    'dob' => $pax['date_of_birth'] ?? null,
+
+                    'gender' => $pax['gender'] ?? null,
+
+                    'passport_no' => !empty($pax['passport_no']) ? $pax['passport_no'] : null,
+
+                    'passport_expiry' => !empty($pax['passport_expiry']) ? $pax['passport_expiry'] : null,
+
+                    'meal' => $pax['meal'] ?? null,
+
+                    'seat' => $pax['seat'] ?? null,
+
+                    'baggage' => $pax['baggage'] ?? null,
+
+                    'is_lead' => $index == 0,
+                ]);
+            }
+
+        });
     }
 
     private function redirectToSearch()

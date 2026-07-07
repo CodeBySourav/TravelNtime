@@ -90,6 +90,21 @@
         font-weight: 500;
         cursor: pointer;
     }
+
+    .list-group{
+    max-height:300px;
+    overflow-y:auto;
+    border:1px solid #ddd;
+    background:#fff;
+    }
+
+    .list-group-item{
+        cursor:pointer;
+    }
+
+    .list-group-item:hover{
+        background:#f5f5f5;
+    }
 </style>
 
 @if(session('error'))
@@ -167,13 +182,39 @@
                     <div class="col-md-3 mb-2">
                         <div class="input-block">
                             <label>From</label>
-                            <input type="text" name="origin" placeholder="e.g. DEL" value="DEL" required style="text-transform: uppercase;">
+                            <div class="position-relative">
+                                <input type="text"
+                                    id="origin_search"
+                                    class="form-control"
+                                    placeholder="City or Airport">
+
+                                <input type="hidden"
+                                    name="origin"
+                                    id="origin">
+
+                                <div id="origin_list"
+                                    class="list-group position-absolute w-100"
+                                    style="z-index:9999;"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-2">
                         <div class="input-block">
                             <label>To</label>
-                            <input type="text" name="destination" placeholder="e.g. BOM" value="BOM" required style="text-transform: uppercase;">
+                            <div class="position-relative">
+                                <input type="text"
+                                    id="destination_search"
+                                    class="form-control"
+                                    placeholder="City or Airport">
+
+                                <input type="hidden"
+                                    name="destination"
+                                    id="destination">
+
+                                <div id="destination_list"
+                                    class="list-group position-absolute w-100"
+                                    style="z-index:9999;"></div>
+                            </div>  
                         </div>
                     </div>
                     <div class="col-md-3 mb-2">
@@ -220,6 +261,7 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
     // Handle toggle UI behavior cleanly
     document.getElementById('journey_type').addEventListener('change', function() {
@@ -230,5 +272,61 @@
             returnBox.style.display = 'none';
         }
     });
+</script>
+
+<script>
+function airportSearch(inputId, hiddenId, listId) {
+
+    $('#' + inputId).on('keyup', function () {
+
+        let keyword = $(this).val();
+
+        if (keyword.length < 2) {
+            $('#' + listId).html('');
+            return;
+        }
+
+        $.get("{{ route('airports.search') }}", {
+            q: keyword
+        }, function (data) {
+
+            let html = '';
+
+            $.each(data, function (i, airport) {
+
+                html += `
+                    <a href="#"
+                       class="list-group-item list-group-item-action airport-item"
+                       data-code="${airport.airport_code}"
+                       data-name="${airport.city_name} (${airport.airport_code}) - ${airport.airport_name}">
+                        <strong>${airport.city_name}</strong> (${airport.airport_code})<br>
+                        <small>${airport.airport_name}</small>
+                    </a>
+                `;
+
+            });
+
+            $('#' + listId).html(html);
+
+        });
+
+    });
+
+    $(document).on('click', '#' + listId + ' .airport-item', function (e) {
+
+        e.preventDefault();
+
+        $('#' + inputId).val($(this).data('name'));
+
+        $('#' + hiddenId).val($(this).data('code'));
+
+        $('#' + listId).html('');
+
+    });
+
+}
+
+airportSearch('origin_search', 'origin', 'origin_list');
+airportSearch('destination_search', 'destination', 'destination_list');
 </script>
 @endsection
