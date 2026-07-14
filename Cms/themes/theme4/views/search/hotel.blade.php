@@ -9,15 +9,26 @@
     <div class="search-grid">
 
         {{-- Destination --}}
-        <div class="input-card">
-            <span class="input-label"><i class="fa fa-map-marker-alt"></i> Destination</span>
-            <input type="text" 
-                   name="city" 
-                   placeholder="City / Hotel / Destination" 
-                   required 
-                   autocomplete="off">
-        </div>
+        <div class="input-card position-relative">
 
+            <span class="input-label">
+                <i class="fa fa-map-marker-alt"></i> Destination
+            </span>
+
+            <input type="text"
+                id="destination"
+                placeholder="City / Hotel / Destination"
+                autocomplete="off"
+                required>
+
+            {{-- This will store DestinationId --}}
+            <input type="hidden"
+                name="city"
+                id="destination_id">
+
+            <div id="destination-list" class="destination-list"></div>
+
+        </div>
         {{-- Check In --}}
         <div class="input-card">
             <span class="input-label"><i class="fa fa-calendar-alt"></i> Check In</span>
@@ -291,3 +302,5 @@
     background: var(--primary-hover);
 }
 </style>
+
+

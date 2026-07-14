@@ -181,6 +181,9 @@ Route::prefix('hotel')->group(function () {
 
     Route::post('/{booking}/cancel', [HotelBookingController::class, 'cancel'])
     ->name('hotel.cancel');
+
+    Route::get('/destination-search', [HotelBookingController::class, 'destinationSearch'])
+    ->name('hotel.destination.search');
 });
 
 

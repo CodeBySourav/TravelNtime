@@ -29,6 +29,8 @@ class TboService
 
     protected $changeRequestStatusUrl ="https://HotelBE.tektravels.com/internalhotelservice.svc/rest/GetChangeRequestStatus";
 
+    protected $destinationSearchUrl = "http://api.tektravels.com/SharedServices/StaticData.svc/rest/GetDestinationSearchStaticData";
+
     public function getToken()
     {
         $today = Carbon::today()->toDateString();
@@ -378,95 +380,125 @@ class TboService
         return $result['GetBookingDetailResult'];
     }
 
-public function sendChangeRequest(int $bookingId, string $remarks = 'Cancelled by customer')
-{
-    $payload = [
-        "BookingMode" => 5,
-        "RequestType" => 4,
-        "Remarks" => $remarks,
-        "BookingId" => $bookingId,
-        "EndUserIp" => config('services.tbo.end_user_ip'),
-        "TokenId" => $this->getToken(),
-    ];
+    public function sendChangeRequest(int $bookingId, string $remarks = 'Cancelled by customer')
+    {
+        $payload = [
+            "BookingMode" => 5,
+            "RequestType" => 4,
+            "Remarks" => $remarks,
+            "BookingId" => $bookingId,
+            "EndUserIp" => config('services.tbo.end_user_ip'),
+            "TokenId" => $this->getToken(),
+        ];
 
-    Log::info('========== CANCEL REQUEST ==========');
-    Log::info(json_encode($payload, JSON_PRETTY_PRINT));
+        Log::info('========== CANCEL REQUEST ==========');
+        Log::info(json_encode($payload, JSON_PRETTY_PRINT));
 
-    $response = Http::acceptJson()
-        ->contentType('application/json')
-        ->timeout(120)
-        ->post($this->sendChangeRequestUrl, $payload);
+        $response = Http::acceptJson()
+            ->contentType('application/json')
+            ->timeout(120)
+            ->post($this->sendChangeRequestUrl, $payload);
 
-    Log::info('========== CANCEL HTTP RESPONSE ==========');
-    Log::info([
-        'status' => $response->status(),
-        'body'   => $response->body(),
-    ]);
+        Log::info('========== CANCEL HTTP RESPONSE ==========');
+        Log::info([
+            'status' => $response->status(),
+            'body'   => $response->body(),
+        ]);
 
-    if (!$response->successful()) {
-        throw new Exception('Unable to cancel booking.');
+        if (!$response->successful()) {
+            throw new Exception('Unable to cancel booking.');
+        }
+
+        $result = $response->json();
+
+        Log::info('========== CANCEL PARSED RESPONSE ==========');
+        Log::info($result);
+
+        $hotelResult = $result['HotelChangeRequestResult'] ?? null;
+
+        if (!$hotelResult || $hotelResult['ResponseStatus'] != 1) {
+            throw new Exception(
+                $hotelResult['Error']['ErrorMessage'] ?? 'Cancellation failed.'
+            );
+        }
+
+        return $hotelResult;
     }
 
-    $result = $response->json();
+    public function getChangeRequestStatus(int $changeRequestId)
+    {
+        $payload = [
+            "BookingMode"     => 5,
+            "ChangeRequestId" => $changeRequestId,
+            "EndUserIp"       => config('services.tbo.end_user_ip'),
+            "TokenId"         => $this->getToken(),
+        ];
 
-    Log::info('========== CANCEL PARSED RESPONSE ==========');
-    Log::info($result);
+        Log::info('========== CHANGE REQUEST STATUS REQUEST ==========');
+        Log::info(json_encode($payload, JSON_PRETTY_PRINT));
 
-    $hotelResult = $result['HotelChangeRequestResult'] ?? null;
+        $response = Http::acceptJson()
+            ->contentType('application/json')
+            ->timeout(120)
+            ->post($this->changeRequestStatusUrl, $payload);
 
-    if (!$hotelResult || $hotelResult['ResponseStatus'] != 1) {
-        throw new Exception(
-            $hotelResult['Error']['ErrorMessage'] ?? 'Cancellation failed.'
-        );
+        Log::info('========== CHANGE REQUEST STATUS RESPONSE ==========');
+        Log::info([
+            'status' => $response->status(),
+            'body'   => $response->body(),
+        ]);
+
+        if (!$response->successful()) {
+            throw new Exception(
+                "Unable to fetch change request status. HTTP " . $response->status()
+            );
+        }
+
+        $result = $response->json();
+
+        Log::info('========== CHANGE REQUEST STATUS PARSED ==========');
+        Log::info($result);
+
+        if (
+            !isset($result['HotelChangeRequestStatusResult']) ||
+            $result['HotelChangeRequestStatusResult']['ResponseStatus'] != 1
+        ) {
+            throw new Exception(
+                $result['HotelChangeRequestStatusResult']['Error']['ErrorMessage']
+                ?? 'Failed to get change request status.'
+            );
+        }
+
+        return $result['HotelChangeRequestStatusResult'];
     }
 
-    return $hotelResult;
-}
+    public function getDestinations(string $countryCode = 'IN', string $searchType = '1')
+    {
+        $payload = [
+            "ClientId"    => config('services.tbo.client_id'),
+            "EndUserIp"   => config('services.tbo.end_user_ip'),
+            "TokenId"     => $this->getToken(),
+            "SearchType"  => $searchType,
+            "CountryCode" => $countryCode,
+        ];
 
-public function getChangeRequestStatus(int $changeRequestId)
-{
-    $payload = [
-        "BookingMode"     => 5,
-        "ChangeRequestId" => $changeRequestId,
-        "EndUserIp"       => config('services.tbo.end_user_ip'),
-        "TokenId"         => $this->getToken(),
-    ];
+        $response = Http::acceptJson()
+            ->contentType('application/json')
+            ->timeout(120)
+            ->post($this->destinationSearchUrl, $payload);
 
-    Log::info('========== CHANGE REQUEST STATUS REQUEST ==========');
-    Log::info(json_encode($payload, JSON_PRETTY_PRINT));
+        if (!$response->successful()) {
+            throw new \Exception('Unable to fetch destinations.');
+        }
 
-    $response = Http::acceptJson()
-        ->contentType('application/json')
-        ->timeout(120)
-        ->post($this->changeRequestStatusUrl, $payload);
+        $result = $response->json();
 
-    Log::info('========== CHANGE REQUEST STATUS RESPONSE ==========');
-    Log::info([
-        'status' => $response->status(),
-        'body'   => $response->body(),
-    ]);
+        if (($result['Status'] ?? 0) != 1) {
+            throw new \Exception(
+                $result['Error']['ErrorMessage'] ?? 'Destination API Failed.'
+            );
+        }
 
-    if (!$response->successful()) {
-        throw new Exception(
-            "Unable to fetch change request status. HTTP " . $response->status()
-        );
+        return $result['GetDestinationSearchStaticDataResult'] ?? [];
     }
-
-    $result = $response->json();
-
-    Log::info('========== CHANGE REQUEST STATUS PARSED ==========');
-    Log::info($result);
-
-    if (
-        !isset($result['HotelChangeRequestStatusResult']) ||
-        $result['HotelChangeRequestStatusResult']['ResponseStatus'] != 1
-    ) {
-        throw new Exception(
-            $result['HotelChangeRequestStatusResult']['Error']['ErrorMessage']
-            ?? 'Failed to get change request status.'
-        );
-    }
-
-    return $result['HotelChangeRequestStatusResult'];
-}
 }
