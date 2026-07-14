@@ -185,8 +185,20 @@ class FlightController extends Controller
                 ->with('error', 'Please select a flight.');
         }
 
+        $search = session('flight.search', []);
+
+        Log::info('Passenger Count', [
+            'adults'   => $search['adult'] ?? 0,
+            'children' => $search['child'] ?? 0,
+            'infants'  => $search['infant'] ?? 0,
+            'total'    => ($search['adult'] ?? 0)
+                        + ($search['child'] ?? 0)
+                        + ($search['infant'] ?? 0),
+        ]);
+
         return view('tourbooking::flights.traveller', [
-            'fareQuote' => session('flight.fare_quote')
+            'fareQuote' => session('flight.fare_quote'),
+            'search'    => $search,
         ]);
     }
 
@@ -271,37 +283,37 @@ class FlightController extends Controller
     public function afterSSR(Request $request)
     {
 
-    $paymentId = $request->razorpay_payment_id;
+        $paymentId = $request->razorpay_payment_id;
 
-    if (!$paymentId) {
-        return back()->with('error', 'Payment not completed.');
-    }
+        if (!$paymentId) {
+            return back()->with('error', 'Payment not completed.');
+        }
 
-    // Verify payment with Razorpay API
+        // Verify payment with Razorpay API
 
-    session([
-        'flight.payment_id' => $paymentId,
-        'flight.payment_status' => true,
-        'flight.selected_ssr' => $request->all(),
-    ]);
-
-        // Save selected SSR
         session([
+            'flight.payment_id' => $paymentId,
+            'flight.payment_status' => true,
             'flight.selected_ssr' => $request->all(),
         ]);
 
-        if (session('flight.is_lcc')) {
+            // Save selected SSR
+            session([
+                'flight.selected_ssr' => $request->all(),
+            ]);
 
-            // LCC -> Direct Ticket API
-            Log::info("redirect()->route('flight.ticket');");
+            if (session('flight.is_lcc')) {
 
-            return redirect()->route('flight.ticket');
+                // LCC -> Direct Ticket API
+                Log::info("redirect()->route('flight.ticket');");
 
-        }
-            Log::info("redirect()->route('flight.book');");
+                return redirect()->route('flight.ticket');
 
-        // Non-LCC -> Hold Booking first
-        return redirect()->route('flight.book');
+            }
+                Log::info("redirect()->route('flight.book');");
+
+            // Non-LCC -> Hold Booking first
+            return redirect()->route('flight.book');
     }
 
 

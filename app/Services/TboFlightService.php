@@ -303,7 +303,7 @@ class TboFlightService
                 "DateOfBirth" => $t['dob'] ?? null,
                 "Gender" => $t['gender'],
 
-                "AddressLine1" => $t['address'] ?? 'N/A',
+                "AddressLine1" => $t['address'] ?? 'Jamshedpur',
                 "City" => $t['city'] ?? 'Jamshedpur',
                 "CountryCode" => "IN",
                 "CountryName" => "India",
@@ -413,8 +413,8 @@ class TboFlightService
             "PassportNo" => $t['passport_no'] ?? '',
             "PassportExpiry" => $t['passport_expiry'] ?? '',
 
-            "AddressLine1" => $t['address'] ?? '',
-            "City" => $t['city'] ?? '',
+            "AddressLine1" => $t['address'] ?? 'Jamshedpur',
+            "City" => $t['city'] ?? 'Jamshedpur',
             "CountryCode" => "IN",
             "CountryName" => "India",
 

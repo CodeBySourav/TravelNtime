@@ -4,6 +4,15 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+@php
+$adultCount  = $search['adult'] ?? 1;
+$childCount  = $search['child'] ?? 0;
+$infantCount = $search['infant'] ?? 0;
+
+$index = 0;
+@endphp
+
+
 <style>
     /* Custom Brand Styles overrides */
     :root {
@@ -213,98 +222,267 @@
                 </div>
 
                 {{-- ================= PASSENGER REGISTRATION FORM CARD ================= --}}
-                <div class="card shadow-sm border-0 mb-4" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
-                    <div class="p-3 border-bottom d-flex flex-wrap justify-content-between align-items-center bg-brand-light" style="font-size: 0.85rem; border-color: rgba(170, 0, 34, 0.08) !important;">
-                        <span class="font-weight-semibold text-dark mb-2 mb-md-0"><i class="fa fa-user-circle mr-1 text-brand"></i> Sign-in to your profile to fetch saved traveler parameters automatically.</span>
-                        <a href="#" class="btn btn-brand-primary btn-sm px-3 font-weight-bold" style="border-radius: 6px;">Login Now</a>
+                @for($i = 1; $i <= $adultCount; $i++)
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body">
+
+                            <h5>Adult {{ $i }}</h5>
+
+                            <div class="row">
+
+                                <div class="col-md-2">
+                                    <label>Title</label>
+                                    <select name="travellers[{{ $index }}][title]" class="form-control" required>
+                                        <option value="">Select</option>
+                                        <option>Mr</option>
+                                        <option>Mrs</option>
+                                        <option>Ms</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-5">
+                                    <label>First Name</label>
+                                    <input
+                                        type="text"
+                                        name="travellers[{{ $index }}][first_name]"
+                                        class="form-control"
+                                        required>
+                                </div>
+
+                                <div class="col-md-5">
+                                    <label>Last Name</label>
+                                    <input
+                                        type="text"
+                                        name="travellers[{{ $index }}][last_name]"
+                                        class="form-control"
+                                        required>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label>DOB</label>
+                                    <input
+                                        type="date"
+                                        name="travellers[{{ $index }}][dob]"
+                                        data-pax="1"
+                                        class="form-control dob-field"
+                                        required>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label>Gender</label>
+                                    <select
+                                        name="travellers[{{ $index }}][gender]"
+                                        class="form-control"
+                                        required>
+
+                                        <option value="">Select</option>
+                                        <option value="1">Male</option>
+                                        <option value="2">Female</option>
+
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label>Passenger Type</label>
+
+                                    <input type="hidden"
+                                        name="travellers[{{ $index }}][pax_type]"
+                                        value="1">
+
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        value="Adult"
+                                        readonly>
+                                </div>
+
+                            </div>
+
+                        </div>
                     </div>
-                    
-                    <div class="card-body p-4">
-                        <h6 class="font-weight-bold text-dark border-bottom pb-2 mb-4 d-flex align-items-center">
-                            <span class="badge btn-brand-primary mr-2 px-2.5 py-1" style="font-size: 0.75rem; border-radius: 4px;">Primary</span> Adult 1
-                        </h6>
+
+                    @php $index++; @endphp
+
+                    @endfor
+
+
+            @for($i = 1; $i <= $childCount; $i++)
+
+                <div class="card mb-3">
+                    <div class="card-body">
+
+                        <h5>Child {{ $i }}</h5>
+
                         <div class="row">
-                            <div class="col-md-2 mb-3">
-                                <label class="small font-weight-bold text-muted">Title</label>
-                                <select name="travellers[0][title]" class="form-control border-light shadow-xs" style="border-radius: 8px; height: 42px;" required>
+
+                            <div class="col-md-2">
+                                <label>Title</label>
+                                <select
+                                    name="travellers[{{ $index }}][title]"
+                                    class="form-control"
+                                    required>
+
                                     <option value="">Select</option>
-                                    <option>Mr</option>
-                                    <option>Mrs</option>
-                                    <option>Ms</option>
-                                    <option>Miss</option>
+                                    <option value="Master">Master</option>
+                                    <option value="Miss">Miss</option>
+
                                 </select>
                             </div>
 
-                            <div class="col-md-5 mb-3">
-                                <label class="small font-weight-bold text-muted">First Name (Identical to Govt ID)</label>
-                                <input type="text" name="travellers[0][first_name]" class="form-control border-light shadow-xs" style="border-radius: 8px; height: 42px;" placeholder="First & Middle Name" required>
+                            <div class="col-md-5">
+                                <label>First Name</label>
+                                <input
+                                    type="text"
+                                    name="travellers[{{ $index }}][first_name]"
+                                    class="form-control"
+                                    required>
                             </div>
 
-                            <div class="col-md-5 mb-3">
-                                <label class="small font-weight-bold text-muted">Last Name</label>
-                                <input type="text" name="travellers[0][last_name]" class="form-control border-light shadow-xs" style="border-radius: 8px; height: 42px;" placeholder="Last Name" required>
+                            <div class="col-md-5">
+                                <label>Last Name</label>
+                                <input
+                                    type="text"
+                                    name="travellers[{{ $index }}][last_name]"
+                                    class="form-control"
+                                    required>
                             </div>
 
-                            <div class="col-md-4 mb-3">
-                                <label class="small font-weight-bold text-muted">Date of Birth</label>
-                                <input type="date" name="travellers[0][dob]" class="form-control border-light shadow-xs" style="border-radius: 8px; height: 42px;" required>
+                            <div class="col-md-4">
+                                <label>DOB</label>
+                                <input
+                                    type="date"
+                                    name="travellers[{{ $index }}][dob]"
+                                    data-pax="2"
+                                    class="form-control dob-field"
+                                    required>
                             </div>
 
-                            <div class="col-md-4 mb-3">
-                                <label class="small font-weight-bold text-muted">Gender</label>
-                                <select name="travellers[0][gender]" class="form-control border-light shadow-xs" style="border-radius: 8px; height: 42px;" required>
+                            <div class="col-md-4">
+                                <label>Gender</label>
+                                <select
+                                    name="travellers[{{ $index }}][gender]"
+                                    class="form-control"
+                                    required>
+
                                     <option value="">Select</option>
                                     <option value="1">Male</option>
                                     <option value="2">Female</option>
+
                                 </select>
                             </div>
 
-                            <div class="col-md-4 mb-3">
-                                <label class="small font-weight-bold text-muted">Passenger Type</label>
-                                <select name="travellers[0][pax_type]" class="form-control border-light shadow-xs" style="border-radius: 8px; height: 42px;" readonly>
-                                    <option value="1">Adult</option>
-                                </select>
+                            <div class="col-md-4">
+                                <label>Passenger Type</label>
+
+                                <input
+                                    type="hidden"
+                                    name="travellers[{{ $index }}][pax_type]"
+                                    value="2">
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="Child"
+                                    readonly>
                             </div>
 
-                            <div class="col-md-8 mb-3">
-                                <label class="small font-weight-bold text-muted">Address</label>
-                                <input type="text" name="travellers[0][address]" class="form-control border-light shadow-xs" style="border-radius: 8px; height: 42px;" placeholder="Street Address">
-                            </div>
-
-                            <div class="col-md-2 mb-3">
-                                <label class="small font-weight-bold text-muted">City</label>
-                                <input type="text" name="travellers[0][city]" class="form-control border-light shadow-xs" style="border-radius: 8px; height: 42px;" placeholder="City">
-                            </div>
-
-                            <div class="col-md-2 mb-3">
-                                <label class="small font-weight-bold text-muted">Nationality</label>
-                                <input type="text" name="travellers[0][nationality]" class="form-control border-light shadow-xs" style="border-radius: 8px; height: 42px;" value="IN">
-                            </div>
                         </div>
 
-                        <div class="mt-3">
-                            <a class="text-decoration-none small font-weight-bold text-brand" data-toggle="collapse" href="#optionalFields" role="button" aria-expanded="false">
-                                <i class="fa fa-plus-square mr-1"></i> Add Passport & Document Details (Optional International Segment Tracking)
-                            </a>
-                            <div class="collapse mt-3" id="optionalFields">
-                                <div class="row p-3 bg-light rounded-lg" style="border-radius: 8px;">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="small font-weight-bold text-muted">Passport Number</label>
-                                        <input type="text" name="travellers[0][passport_no]" class="form-control bg-white border-light shadow-xs" style="height: 42px;">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="small font-weight-bold text-muted">Issue Date</label>
-                                        <input type="date" name="travellers[0][passport_issue]" class="form-control bg-white border-light shadow-xs" style="height: 42px;">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="small font-weight-bold text-muted">Expiry Date</label>
-                                        <input type="date" name="travellers[0][passport_expiry]" class="form-control bg-white border-light shadow-xs" style="height: 42px;">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
+
+                @php $index++; @endphp
+
+                @endfor
+
+            @for($i = 1; $i <= $infantCount; $i++)
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+
+                        <h5>Infant {{ $i }}</h5>
+
+                        <div class="row">
+
+                            <div class="col-md-2">
+                                <label>Title</label>
+                                <select
+                                    name="travellers[{{ $index }}][title]"
+                                    class="form-control"
+                                    required>
+
+                                    <option value="">Select</option>
+                                    <option value="Master">Master</option>
+                                    <option value="Miss">Miss</option>
+
+                                </select>
+                            </div>
+
+                            <div class="col-md-5">
+                                <label>First Name</label>
+                                <input
+                                    type="text"
+                                    name="travellers[{{ $index }}][first_name]"
+                                    class="form-control"
+                                    required>
+                            </div>
+
+                            <div class="col-md-5">
+                                <label>Last Name</label>
+                                <input
+                                    type="text"
+                                    name="travellers[{{ $index }}][last_name]"
+                                    class="form-control"
+                                    required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label>DOB</label>
+                                <input
+                                    type="date"
+                                    name="travellers[{{ $index }}][dob]"
+                                    data-pax="3"
+                                    class="form-control dob-field"
+                                    required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label>Gender</label>
+                                <select
+                                    name="travellers[{{ $index }}][gender]"
+                                    class="form-control"
+                                    required>
+
+                                    <option value="">Select</option>
+                                    <option value="1">Male</option>
+                                    <option value="2">Female</option>
+
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label>Passenger Type</label>
+
+                                <input
+                                    type="hidden"
+                                    name="travellers[{{ $index }}][pax_type]"
+                                    value="3">
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="Infant"
+                                    readonly>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            @php $index++; @endphp
+
+            @endfor
 
                 {{-- ================= CONTACT INFORMATION PROFILE ================= --}}
                 <div class="card shadow-sm border-0 mb-4" style="border-radius: 16px; background: #ffffff;">
@@ -444,4 +622,78 @@
         </div>
     </form>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+
+function validateDOB(input) {
+
+    const today = new Date();
+    const dob = new Date(input.value);
+
+    if (!input.value) return true;
+
+    const pax = input.dataset.pax;
+
+    let age = today.getFullYear() - dob.getFullYear();
+
+    const m = today.getMonth() - dob.getMonth();
+
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+        age--;
+    }
+
+    let message = '';
+
+    if (pax == "1" && age < 12) {
+        message = "Adult age should be greater than or equal to 12 years.";
+    }
+
+    if (pax == "2" && (age < 2 || age >= 12)) {
+        message = "Child age should be between 2 and 11 years.";
+    }
+
+    if (pax == "3" && age >= 2) {
+        message = "Infant age should be less than 2 years.";
+    }
+
+    if (message !== '') {
+        alert(message);
+        input.value = '';
+        input.focus();
+        return false;
+    }
+
+    return true;
+}
+
+// Validate immediately after selecting DOB
+document.querySelectorAll('.dob-field').forEach(function(input){
+
+    input.addEventListener('change', function () {
+        validateDOB(this);
+    });
+
+});
+
+// Validate again before submit
+document.querySelector('form').addEventListener('submit', function(e){
+
+    let valid = true;
+
+    document.querySelectorAll('.dob-field').forEach(function(input){
+
+        if(!validateDOB(input)){
+            valid = false;
+        }
+
+    });
+
+    if(!valid){
+        e.preventDefault();
+    }
+
+});
+
+</script>
 @endsection

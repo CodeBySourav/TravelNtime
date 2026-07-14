@@ -134,12 +134,12 @@
                                                             </td>
                                                             <td class="crancy-table__column-2 crancy-table__data-2">
                                                                 <a href="javascript:void(0)"
-   class="brand-btn-view booking-details-btn"
-   data-booking-id="{{ $flight->booking_id }}"
-   data-pnr="{{ $flight->pnr }}"
-   data-trace-id="{{ $flight->trace_id }}">
-    <i class="fas fa-eye"></i> Details
-</a>
+                                                                    class="brand-btn-view booking-details-btn"
+                                                                    data-booking-id="{{ $flight->booking_id }}"
+                                                                    data-pnr="{{ $flight->pnr }}"
+                                                                    data-trace-id="{{ $flight->trace_id }}">
+                                                                        <i class="fas fa-eye"></i> Details
+                                                                    </a>
                                                             </td>
                                                         </tr>
                                                     @empty
