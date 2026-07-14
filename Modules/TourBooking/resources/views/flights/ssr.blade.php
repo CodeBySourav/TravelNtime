@@ -533,11 +533,56 @@
                 <i class="fa-solid fa-arrow-left me-1"></i> Back to Review
             </a>
             
-            <button type="submit" class="btn btn-primary px-5 fw-bold rounded-2 shadow-sm py-2" style="font-size: 0.9rem; background-color: #aa0022; border: none;">
-                Continue Booking <i class="fa-solid fa-arrow-right ms-1"></i>
-            </button>
+            <button type="button" id="payBtn"
+    class="btn btn-primary px-5 fw-bold rounded-2 shadow-sm py-2"
+    style="font-size:0.9rem;background:#aa0022;border:none;">
+    Pay & Continue
+    <i class="fa-solid fa-arrow-right ms-1"></i>
+</button>
         </div>
 
     </form>
 </div>
+
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+document.getElementById('payBtn').onclick = function(e){
+
+    var options = {
+
+        key: "{{ config('services.razorpay.key') }}",
+
+        amount: "{{ session('flight.fare_quote')['Response']['Results']['Fare']['PublishedFare'] * 100 }}",
+
+        currency: "INR",
+
+        name: "Travel & Time",
+
+        description: "Flight Booking",
+
+        handler: function (response){
+
+            let form = document.querySelector("form");
+
+            let payment = document.createElement("input");
+            payment.type = "hidden";
+            payment.name = "razorpay_payment_id";
+            payment.value = response.razorpay_payment_id;
+
+            form.appendChild(payment);
+
+            form.submit();
+        }
+
+    };
+
+    var rzp = new Razorpay(options);
+
+    rzp.open();
+
+    e.preventDefault();
+}
+</script>
 @endsection

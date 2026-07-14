@@ -25,6 +25,7 @@ use Modules\GlobalSetting\App\Models\GlobalSetting;
 use App\Facades\Theme;
 use Modules\Team\App\Models\Team;
 use Illuminate\Support\Facades\File;
+use App\Models\Airport;
 
 class HomeController extends Controller
 {
@@ -75,6 +76,8 @@ class HomeController extends Controller
             $data['current_theme'] = $selectedTheme;
 
             // dd($data);
+
+            $data['airports'] = Airport::orderBy('city_name')->get();
 
             // Return the theme view
             return theme()->view('index', $data);

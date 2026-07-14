@@ -35,7 +35,6 @@ class TboFlightService
     protected string $bookingDetailsUrl =
     'https://api.tektravels.com/BookingEngineService_Air/AirService.svc/rest/GetBookingDetails';
 
-    
         /**
      * Get Authentication Token
      */
@@ -647,5 +646,77 @@ class TboFlightService
 
         throw $e;
     }
+}
+
+
+public function getBookingDetails(
+    $bookingId = null,
+    $pnr = null,
+    $traceId = null
+): array {
+
+    $payload = [
+
+        "EndUserIp" => config('services.tbo.end_user_ip'),
+
+        "TokenId" => $this->getToken(),
+
+        "BookingId" => $bookingId ?: 0,
+
+        "PNR" => $pnr,
+
+        "TraceId" => $traceId,
+
+    ];
+
+
+    Log::info('========== GET BOOKING DETAILS REQUEST ==========');
+
+    Log::info(json_encode(
+        $payload,
+        JSON_PRETTY_PRINT
+    ));
+
+    $response = Http::timeout(120)
+        ->acceptJson()
+        ->post(
+            $this->bookingDetailsUrl,
+            $payload
+        );
+
+    Log::info('========== GET BOOKING DETAILS RESPONSE ==========');
+
+    Log::info([
+        'status' => $response->status(),
+        'body' => $response->body(),
+    ]);
+
+    if (!$response->successful()) {
+
+        throw new Exception(
+            'Unable to connect GetBookingDetails API.'
+        );
+
+    }
+
+    $data = $response->json();
+
+    if (
+        !isset($data['Response']) ||
+        ($data['Response']['ResponseStatus'] ?? 0) != 1
+    ) {
+
+        throw new Exception(
+
+            data_get(
+                $data,
+                'Response.Error.ErrorMessage'
+            ) ?? 'Unable to fetch booking details.'
+
+        );
+
+    }
+
+    return $data;
 }
 }

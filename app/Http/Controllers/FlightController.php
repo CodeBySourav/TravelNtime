@@ -11,6 +11,7 @@ use App\Models\FlightPassenger;
 use App\Models\FlightSegment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PaymentBooking;
 
 class FlightController extends Controller
 {
@@ -268,7 +269,22 @@ class FlightController extends Controller
     }
 
     public function afterSSR(Request $request)
-    { 
+    {
+
+    $paymentId = $request->razorpay_payment_id;
+
+    if (!$paymentId) {
+        return back()->with('error', 'Payment not completed.');
+    }
+
+    // Verify payment with Razorpay API
+
+    session([
+        'flight.payment_id' => $paymentId,
+        'flight.payment_status' => true,
+        'flight.selected_ssr' => $request->all(),
+    ]);
+
         // Save selected SSR
         session([
             'flight.selected_ssr' => $request->all(),
@@ -410,6 +426,34 @@ class FlightController extends Controller
                 'api_response' => $response,
             ]);
 
+            PaymentBooking::create([
+
+                'user_id' => Auth::id(),
+
+                'booking_id' => $booking->id,
+
+                'payment_for' => 'flight',
+
+                'gateway' => 'Razorpay',
+
+                'payment_id' => session('flight.payment_id'),
+
+                'order_id' => session('flight.order_id'),
+
+                'signature' => session('flight.signature'),
+
+                'amount' => $fareQuote['Response']['Results']['Fare']['PublishedFare'] ?? 0,
+
+                'currency' => 'INR',
+
+                'payment_method' => session('flight.payment_method'),
+
+                'status' => session('flight.payment_status'),
+
+                'response' => session('flight.payment_response'),
+
+            ]);
+
             foreach ($segments as $segment) {
 
                 FlightSegment::create([
@@ -486,4 +530,35 @@ class FlightController extends Controller
             ->route('flight.search.form')
             ->with('error', 'Your flight session has expired. Please search again.');
     }
+
+    public function flightbookingDetails(Request $request)
+{
+    $request->validate([
+        'booking_id' => 'nullable',
+        'pnr'        => 'nullable',
+        'trace_id'   => 'nullable',
+    ]);
+
+    try {
+
+        $response = $this->flight->getBookingDetails(
+            $request->booking_id,
+            $request->pnr,
+            $request->trace_id
+        );
+
+        return response()->json([
+            'success' => true,
+            'data'    => $response
+        ]);
+
+    } catch (Exception $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ],500);
+
+    }
+}
 }

@@ -12,6 +12,8 @@ use Modules\TourBooking\App\Models\Booking;
 use Modules\TourBooking\App\Models\Service;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use App\Models\FlightBooking;
+use App\Models\HotelBooking;
 
 final class BookingController extends Controller
 {
@@ -19,11 +21,18 @@ final class BookingController extends Controller
 
     public function index(): View
     {
-        $bookings = Booking::with(['service:id,title,location'])
-            ->where('user_id', auth()->user()->id)
+        $hotelBookings = HotelBooking::where('user_id', auth()->id())
             ->latest()
             ->get();
-        return view('tourbooking::user.booking.index', compact('bookings'));
+
+        $flightBookings = FlightBooking::with([
+                'passengers',
+                'segments'
+            ])
+            ->where('user_id', auth()->id())
+            ->latest()
+            ->get();
+        return view('tourbooking::user.booking.index', compact('hotelBookings', 'flightBookings'));
     }
 
     public function details(Request $request): View

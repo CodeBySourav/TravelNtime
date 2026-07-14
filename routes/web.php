@@ -23,6 +23,8 @@ use App\Http\Controllers\User\OrderController;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\HotelBookingController;
 use App\Http\Controllers\FlightController;
+use App\Facades\Theme;
+
 
 Route::group(['middleware' => ['HtmlSpecialchars', 'MaintenanceMode']], function () {
 
@@ -30,6 +32,22 @@ Route::group(['middleware' => ['HtmlSpecialchars', 'MaintenanceMode']], function
 
     Route::get('/theme/{theme}', [HomeController::class, 'switchTheme'])->name('theme.switch');
     Route::get('/home', [HomeController::class, 'themeVariation'])->name('theme.variation');
+
+    Route::get('/search/form/flight', function () {
+        return theme()->view('search.flight');
+    });
+
+    Route::get('/search/form/hotel', function () {
+        return theme()->view('search.hotel');
+    });
+
+    Route::get('/search/form/tour', function () {
+        return theme()->view('search.tour');
+    });
+
+    Route::get('/search/form/visa', function () {
+        return theme()->viewwe('search.visa');
+    });
 
     Route::get('/about-us', [HomeController::class, 'about_us'])->name('about-us');
 
@@ -205,7 +223,12 @@ Route::prefix('flight')->name('flight.')->group(function () {
 
     Route::get('/ticket', [FlightController::class, 'ticket'])->middleware('auth')
     ->name('ticket');
+    
 });
+
+Route::post('/user/flight/get-booking-details',
+    [FlightController::class,'flightbookingDetails'])->middleware('auth')
+    ->name('flight.booking.details');
 
 Route::group(['as' => 'admin.', 'prefix' => 'admin'], function () {
 

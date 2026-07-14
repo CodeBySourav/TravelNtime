@@ -104,7 +104,7 @@
             <div class="row">
                 <div class="col-lg-6">
                     @if ($footer->address || $footer->email)
-                        <div class="tg-header-top-info d-flex align-items-center">
+                        <div class="tg-header-top-info d-flex align-items-center" style="width: 150%;">
                             <a href="{{ $footer->address_url }}"><i class="mr-5 fa-regular fa-location-dot"></i>
                                 {{ $footer->address }}</a>
                             <span class="tg-header-dvdr mr-20 ml-20"></span>
