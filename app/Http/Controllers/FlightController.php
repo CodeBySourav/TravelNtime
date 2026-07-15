@@ -187,82 +187,34 @@ class FlightController extends Controller
 
         $search = session('flight.search', []);
 
-        Log::info('Passenger Count', [
-            'adults'   => $search['adult'] ?? 0,
-            'children' => $search['child'] ?? 0,
-            'infants'  => $search['infant'] ?? 0,
-            'total'    => ($search['adult'] ?? 0)
-                        + ($search['child'] ?? 0)
-                        + ($search['infant'] ?? 0),
-        ]);
-
-        return view('tourbooking::flights.traveller', [
-            'fareQuote' => session('flight.fare_quote'),
-            'search'    => $search,
-        ]);
-    }
-
-    public function checkout(Request $request)
-    {
-        $request->validate([
-            'travellers' => 'required|array|min:1',
-            'email'      => 'required|email',
-            'mobile'     => 'required'
-        ]);
-
-        Log::info($request);
-
-        $fareQuote = session('flight.fare_quote');
-
-        if (!$fareQuote) {
-            return redirect()
-                ->route('flight.search.form')
-                ->with('error', 'Session expired.');
-        }
-
-        // Save traveller data
-        session([
-            'flight.travellers' => $request->all()
-        ]);
-
         $traceId = session('flight.trace_id');
         $resultIndex = session('flight.result_index');
 
         try {
 
-            $ssr = $this->flight->ssr(
-                $traceId,
-                $resultIndex
-            );
+            $ssr = $this->flight->ssr($traceId, $resultIndex);
 
             session([
                 'flight.ssr' => $ssr
             ]);
 
-            return redirect()->route('flight.ssr');
+        } catch (\Exception $e) {
 
-        } catch (Exception $e) {
+            Log::error($e->getMessage());
 
-            return back()->with('error', $e->getMessage());
-
+            $ssr = [];
         }
-    }
-
-    public function ssr()
-    {
-        
-        $ssr = session('flight.ssr');
 
         $baggage = $ssr['Response']['Baggage'][0] ?? [];
-        $meals    = $ssr['Response']['MealDynamic'][0] ?? [];
+        $meals   = $ssr['Response']['MealDynamic'][0] ?? [];
 
         $seats = [];
 
-        if(isset($ssr['Response']['SeatDynamic'][0]['SegmentSeat'][0]['RowSeats'])){
+        if(isset($ssr['Response']['SeatDynamic'][0]['SegmentSeat'][0]['RowSeats'])) {
 
-            foreach($ssr['Response']['SeatDynamic'][0]['SegmentSeat'][0]['RowSeats'] as $row){
+            foreach ($ssr['Response']['SeatDynamic'][0]['SegmentSeat'][0]['RowSeats'] as $row) {
 
-                foreach($row['Seats'] as $seat){
+                foreach ($row['Seats'] as $seat) {
 
                     $seats[] = $seat;
 
@@ -272,48 +224,164 @@ class FlightController extends Controller
 
         }
 
-        return view('tourbooking::flights.ssr',compact(
-            'ssr',
-            'baggage',
-            'meals',
-            'seats'
-        ));
+        return view('tourbooking::flights.traveller', [
+            'fareQuote' => session('flight.fare_quote'),
+            'search'    => $search,
+            'ssr'       => $ssr,
+            'baggage'   => $baggage,
+            'meals'     => $meals,
+            'seats'     => $seats,
+        ]);
     }
 
-    public function afterSSR(Request $request)
+    public function checkout(Request $request)
     {
-
-        $paymentId = $request->razorpay_payment_id;
-
-        if (!$paymentId) {
-            return back()->with('error', 'Payment not completed.');
-        }
-
-        // Verify payment with Razorpay API
-
-        session([
-            'flight.payment_id' => $paymentId,
-            'flight.payment_status' => true,
-            'flight.selected_ssr' => $request->all(),
+        $request->validate([
+            'travellers' => 'required|array|min:1',
+            'email'      => 'required|email',
+            'mobile'     => 'required',
         ]);
 
-            // Save selected SSR
-            session([
-                'flight.selected_ssr' => $request->all(),
-            ]);
+        $fareQuote = session('flight.fare_quote');
 
-            if (session('flight.is_lcc')) {
+        if (!$fareQuote) {
+            return redirect()
+                ->route('flight.search.form')
+                ->with('error', 'Session expired.');
+        }
 
-                // LCC -> Direct Ticket API
-                Log::info("redirect()->route('flight.ticket');");
+        $ssr = session('flight.ssr');
 
-                return redirect()->route('flight.ticket');
+        $mealOptions = $ssr['Response']['MealDynamic'][0] ?? [];
+        $bagOptions  = $ssr['Response']['Baggage'][0] ?? [];
+
+        $travellers = $request->travellers;
+
+        $mealTotal = 0;
+        $bagTotal  = 0;
+
+        foreach ($travellers as &$traveller) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Meal
+            |--------------------------------------------------------------------------
+            */
+
+            if (!empty($traveller['meal'])) {
+
+                foreach ($mealOptions as $meal) {
+
+                    if ($meal['Code'] == $traveller['meal']) {
+
+                        $traveller['meal_details'] = $meal;
+
+                        $mealTotal += $meal['Price'];
+
+                        break;
+                    }
+
+                }
 
             }
-                Log::info("redirect()->route('flight.book');");
 
-            // Non-LCC -> Hold Booking first
-            return redirect()->route('flight.book');
+            /*
+            |--------------------------------------------------------------------------
+            | Baggage
+            |--------------------------------------------------------------------------
+            */
+
+            if (!empty($traveller['baggage'])) {
+
+                foreach ($bagOptions as $bag) {
+
+                    if ($bag['Code'] == $traveller['baggage']) {
+
+                        $traveller['baggage_details'] = $bag;
+
+                        $bagTotal += $bag['Price'];
+
+                        break;
+                    }
+
+                }
+
+            }
+
+        }
+
+        $publishedFare = $fareQuote['Response']['Results']['Fare']['PublishedFare'];
+
+        $grandTotal = $publishedFare + $mealTotal + $bagTotal;
+
+        session([
+
+            'flight.travellers' => [
+
+                'travellers' => $travellers,
+
+                'email' => $request->email,
+
+                'mobile' => $request->mobile,
+
+            ],
+
+            'flight.meal_total' => $mealTotal,
+
+            'flight.baggage_total' => $bagTotal,
+
+            'flight.total_amount' => $grandTotal,
+
+        ]);
+
+        return redirect()->route('flight.payment');
+    }
+
+    public function payment()
+    {
+        $fareQuote = session('flight.fare_quote');
+        $travellers = session('flight.travellers');
+
+        if (!$fareQuote || !$travellers) {
+            return redirect()
+                ->route('flight.search.form')
+                ->with('error', 'Session expired.');
+        }
+
+        return view('tourbooking::flights.payment', [
+
+            'fareQuote' => $fareQuote,
+
+            'travellers' => $travellers,
+
+            'publishedFare' => $fareQuote['Response']['Results']['Fare']['PublishedFare'],
+
+            'mealTotal' => session('flight.meal_total', 0),
+
+            'baggageTotal' => session('flight.baggage_total', 0),
+
+            'grandTotal' => session('flight.total_amount'),
+
+        ]);
+    }
+ 
+    public function paymentSuccess(Request $request)
+    {
+        session([
+
+            'flight.payment_id' => $request->razorpay_payment_id,
+
+            'flight.payment_status' => true,
+
+        ]);
+
+        if(session('flight.is_lcc')){
+
+            return redirect()->route('flight.ticket');
+
+        }
+
+        return redirect()->route('flight.book');
     }
 
 
@@ -348,6 +416,14 @@ class FlightController extends Controller
 
     public function ticket(Request $request)
     {
+        if (session()->has('flight.ticket')) {
+
+                return view('tourbooking::flights.ticket', [
+                    'ticket' => session('flight.ticket')
+                ]);
+
+            }
+
             Log::info("function ticket(Reques");
 
         try {

@@ -78,22 +78,36 @@
         border-bottom: none;
     }
     
-    /* Print optimizations to cleanly hide sharing tools when printing */
+    /* Strict Print Styles: Hides site header, sidebar, and footer */
     @media print {
+        /* Hide absolutely everything else outside of our ticket scope */
+        html, body, body * {
+            visibility: hidden;
+            background-color: #ffffff !important;
+        }
+        /* Show only the targeted wrapper and its internal elements */
+        .ticket-print-wrapper, .ticket-print-wrapper * {
+            visibility: visible;
+        }
+        /* Position the print target cleanly at the top-left of the page */
+        .ticket-print-wrapper {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
         .no-print {
             display: none !important;
         }
-        body {
-            background-color: #ffffff;
-        }
         .paytm-card {
-            box-shadow: none;
-            border: 1px solid #e0e0e0;
+            box-shadow: none !important;
+            border: 1px solid #e0e0e0 !important;
         }
     }
 </style>
 
-<div class="container py-5">
+{{-- Wrapper added to strictly isolate printing area --}}
+<div class="container py-5 ticket-print-wrapper">
 
     @php
         $response = $ticket['Response'] ?? [];
@@ -107,15 +121,15 @@
             {{-- Share & Action Bar (Hidden on Print) --}}
             <div class="paytm-card p-3 mb-4 no-print d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div class="d-flex align-items-center">
-                    <span class="fs-5 me-2">🔗</span>
+                    <span class="fs-5 me-2">✈️</span>
                     <span class="text-muted small fw-medium">Need to send this itinerary?</span>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-dark px-3 rounded-pill fw-medium" onclick="copyTicketLink()">
-                        📋 Copy Link
+                    <button class="btn btn-sm btn-outline-dark px-3 rounded-pill fw-medium" onclick="shareTicket()">
+                        📤 Share Ticket
                     </button>
                     <button class="btn btn-sm text-white px-3 rounded-pill fw-medium" style="background-color: #aa0022;" onclick="window.print()">
-                        🖨 Print / Download PDF
+                        🖨 Download PDF
                     </button>
                 </div>
             </div>
@@ -254,21 +268,121 @@
             </div>
 
             {{-- Fare Details Section --}}
+            @php
+                $mealTotal = session('flight.meal_total', 0);
+                $baggageTotal = session('flight.baggage_total', 0);
+                $grandTotal = session('flight.total_amount', $itinerary['Fare']['PublishedFare'] ?? 0);
+            @endphp
+
             @if(isset($itinerary['Fare']))
-                <h5 class="fw-bold text-brand-red mb-3">💰 Payment Breakdown</h5>
+                <h5 class="fw-bold text-brand-red mb-3">
+                    💰 Payment Breakdown
+                </h5>
+
                 <div class="paytm-card p-4">
+
                     <div class="fare-row">
-                        <span class="text-muted">Base Fare</span>
-                        <span class="fw-semibold text-dark">₹ {{ number_format($itinerary['Fare']['BaseFare'] ?? 0, 2) }}</span>
+                        <span class="text-muted">
+                            Base Fare
+                        </span>
+
+                        <span class="fw-semibold text-dark">
+                            ₹ {{ number_format($itinerary['Fare']['BaseFare'] ?? 0, 2) }}
+                        </span>
                     </div>
+
                     <div class="fare-row">
-                        <span class="text-muted">Taxes & Fees</span>
-                        <span class="fw-semibold text-dark">₹ {{ number_format($itinerary['Fare']['Tax'] ?? 0, 2) }}</span>
+                        <span class="text-muted">
+                            Taxes & Fees
+                        </span>
+
+                        <span class="fw-semibold text-dark">
+                            ₹ {{ number_format($itinerary['Fare']['Tax'] ?? 0, 2) }}
+                        </span>
                     </div>
-                    <div class="fare-row pt-3 mt-2 border-top" style="border-top: 2px dashed #f0f0f0 !important;">
-                        <span class="fs-5 fw-bold text-dark">Total Amount Paid</span>
-                        <span class="fs-4 fw-bold text-brand-red">₹ {{ number_format($itinerary['Fare']['PublishedFare'] ?? 0, 2) }}</span>
+
+                    <div class="fare-row">
+                        <span class="text-muted">
+                            Flight Fare
+                        </span>
+
+                        <span class="fw-semibold text-dark">
+                            ₹ {{ number_format($itinerary['Fare']['PublishedFare'] ?? 0, 2) }}
+                        </span>
                     </div>
+
+                    @php
+                        $travellers = session('flight.travellers.travellers', []);
+
+                        $mealNames = [];
+                        $bagNames = [];
+
+                        foreach ($travellers as $traveller) {
+
+                            if (!empty($traveller['meal_details']['AirlineDescription'])) {
+                                $mealNames[] = $traveller['meal_details']['AirlineDescription'];
+                            }
+
+                            if (!empty($traveller['baggage_details']['Text'])) {
+
+                                $bagNames[] = $traveller['baggage_details']['Text'];
+
+                            } elseif (!empty($traveller['baggage_details']['Weight'])) {
+
+                                $bagNames[] = $traveller['baggage_details']['Weight'];
+
+                            }
+
+                        }
+                    @endphp
+
+                    @if($mealTotal > 0)
+                    <div class="fare-row">
+                        <span class="text-muted">
+                            In-Flight Meals
+                            @if(count($mealNames))
+                                <small class="d-block text-secondary">
+                                    ({{ implode(', ', $mealNames) }})
+                                </small>
+                            @endif
+                        </span>
+
+                        <span class="fw-semibold text-dark">
+                            ₹ {{ number_format($mealTotal,2) }}
+                        </span>
+                    </div>
+                    @endif
+
+                    @if($baggageTotal > 0)
+                    <div class="fare-row">
+                        <span class="text-muted">
+                            Extra Baggage
+                            @if(count($bagNames))
+                                <small class="d-block text-secondary">
+                                    ({{ implode(', ', $bagNames) }} kg)
+                                </small>
+                            @endif
+                        </span>
+
+                        <span class="fw-semibold text-dark">
+                            ₹ {{ number_format($baggageTotal,2) }}
+                        </span>
+                    </div>
+                    @endif
+
+                    <div class="fare-row pt-3 mt-2 border-top"
+                        style="border-top:2px dashed #eee !important;">
+
+                        <span class="fs-5 fw-bold">
+                            Total Amount Paid
+                        </span>
+
+                        <span class="fs-4 fw-bold text-brand-red">
+                            ₹ {{ number_format($grandTotal,2) }}
+                        </span>
+
+                    </div>
+
                 </div>
             @endif
 
@@ -277,13 +391,26 @@
 </div>
 
 <script>
-    function copyTicketLink() {
-        const dummyUrl = window.location.href;
-        navigator.clipboard.writeText(dummyUrl).then(() => {
-            alert('Ticket link copied to clipboard successfully!');
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-        });
+    function shareTicket() {
+        const ticketUrl = window.location.href;
+        
+        // Use native web share API if supported (mainly mobile browsers)
+        if (navigator.share) {
+            navigator.share({
+                title: 'Flight Itinerary - Ticket Confirmed',
+                text: 'Here is my flight itinerary details.',
+                url: ticketUrl
+            }).catch(err => {
+                console.error('Error sharing: ', err);
+            });
+        } else {
+            // Fallback: Copy link directly to clipboard
+            navigator.clipboard.writeText(ticketUrl).then(() => {
+                alert('Ticket link copied to clipboard successfully!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
     }
 </script>
 @endsection

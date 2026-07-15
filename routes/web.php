@@ -215,6 +215,12 @@ Route::prefix('flight')->name('flight.')->group(function () {
     Route::post('/checkout', [FlightController::class, 'checkout'])->middleware('auth')
         ->name('checkout');
 
+    Route::get('/payment', [FlightController::class, 'payment'])
+    ->name('payment');
+
+    Route::post('/payment/success', [FlightController::class, 'paymentSuccess'])
+        ->name('payment.success');
+
     Route::get('/ssr', [FlightController::class, 'ssr'])->middleware('auth')
         ->name('ssr');
 
